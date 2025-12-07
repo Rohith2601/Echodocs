@@ -1,5 +1,5 @@
-// src/components/EditorWithAI.tsx
-import { useRef, useState } from "react";
+// client/src/components/EditorWithAI.tsx
+import React, { useRef, useState } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import axiosClient from "../api/axiosClient";
@@ -76,25 +76,24 @@ export default function EditorWithAI({ docId }: { docId: string }) {
     setZones([]);
 
     try {
-      // 1) save content (keeps backend + AI text in sync)
+      // 1) Save content to backend (keeps Node + AI in sync)
       await axiosClient.put(
         `/api/documents/${encodeURIComponent(docId)}/content`,
         { content: text }
       );
 
-      // 2) call analyze endpoint
+      // 2) Call analyze endpoint on the backend
       const res = await axiosClient.post(
         `/api/documents/${encodeURIComponent(docId)}/analyze`,
         { text }
       );
-
       const returnedZones: Zone[] = res.data?.zones || [];
       setZones(returnedZones);
       applyZones(returnedZones);
     } catch (err) {
       console.error("Analyze error", err);
       alert(
-        "Analysis failed. Make sure the backend and ai_service are reachable from this frontend."
+        "Analysis failed. Check that the backend and ai_service are both running."
       );
     } finally {
       setLoading(false);
