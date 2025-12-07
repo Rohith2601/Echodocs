@@ -386,6 +386,14 @@ app.post("/api/documents/:id/analyze", async (req, res) => {
   }
 });
 
+// Simple health check & root for Render and manual testing
+app.get("/", (req, res) => {
+  res.send("Echodocs backend is running ✅");
+});
+
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
 
 
 // ===== Start server on 5000 =====
