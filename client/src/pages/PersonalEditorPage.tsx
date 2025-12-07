@@ -8,6 +8,8 @@ import FocusMode from "../components/FocusMode";
 import TimelineSlider from "../components/TimelineSlider";
 import HeatmapPanel from "../components/HeatmapPanel";
 import ReplayPlayer from "../components/ReplayPlayer";
+import axiosClient from "../api/axiosClient";
+
 
 const BACKEND_URL = "http://localhost:5000";
 const FRONTEND_URL = "http://localhost:3000";
@@ -113,27 +115,24 @@ export default function PersonalEditorPage() {
 
   // Create live read-only view (/view/:id) like before
   const handleCreateShareLink = async () => {
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/share-personal`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ docId: generatedId, content }),
-      });
+  try {
+    const res = await axiosClient.post("/api/share-personal", {
+      docId,
+      content,
+    });
 
-      if (!res.ok) throw new Error("Server returned " + res.status);
-      const data = await res.json();
-      const idFromServer = data.id as string | undefined;
-      if (!idFromServer) throw new Error("No id from server");
-
-      setSharedViewId(idFromServer);
-
-      const link = `${FRONTEND_URL}/view/${idFromServer}`;
-      try {
-        await navigator.clipboard.writeText(link);
-        alert("Read-only live view link copied:\n\n" + link);
-      } catch {
-        window.prompt("Copy this link:", link);
-      }
+    const viewId = res.data.id;
+    const url = `${window.location.origin}/view/${viewId}`;
+    await navigator.clipboard.writeText(url);
+    setShareUrl(url);
+    setShareStatus("Link copied!");
+  } catch (err) {
+    console.error(err);
+    setShareStatus(
+      "Failed to create share link. Please check backend is running."
+    );
+  }
+};
 
       // mark hasLiveView in doc index
       upsertDocMeta({
