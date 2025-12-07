@@ -1,8 +1,12 @@
-@'
-fastapi
-uvicorn[standard]
-sentence-transformers
-transformers
-spacy
-torch
-'@ > requirements.txt
+fastapi==0.115.0
+uvicorn[standard]==0.30.0
+
+# core NLP libraries
+spacy==3.7.4
+sentence-transformers==2.7.0
+transformers==4.44.0
+torch>=2.0.0
+
+# optional, but helpful
+numpy>=1.26.0
+scikit-learn>=1.4.0
