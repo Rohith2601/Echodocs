@@ -1,0 +1,98 @@
+/* client/src/components/rich-editor.css */
+
+.rich-editor-root {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: #ffffff;
+}
+
+.toolbar {
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(
+    180deg,
+    rgba(248, 250, 252, 0.98),
+    rgba(241, 245, 249, 0.98)
+  );
+}
+
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tool,
+.tool-select {
+  font-size: 12px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: #4b5563;
+}
+
+.tool:hover,
+.tool-select:hover {
+  border-color: #4f46e5;
+}
+
+.tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+}
+
+.tool-select {
+  padding-right: 24px;
+}
+
+.tool-color {
+  width: 32px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  padding: 2px;
+  cursor: pointer;
+  background: #ffffff;
+}
+
+.toolbar-status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #4b5563;
+}
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.status-text {
+  font-size: 11px;
+}
+
+.rich-editable {
+  min-height: 360px;
+  padding: 14px 16px;
+  outline: none;
+  line-height: 1.6;
+  color: #0f172a;
+  background: #ffffff;
+}
+
+.rich-editable:empty:before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  pointer-events: none;
+  display: block;
+}
