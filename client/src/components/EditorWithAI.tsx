@@ -1,8 +1,8 @@
 // src/components/EditorWithAI.tsx
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import axios from "axios";
+import axiosClient from "../api/axiosClient";
 
 type Zone = {
   id: string;
@@ -13,10 +13,6 @@ type Zone = {
   confidence: number;
   relatedOffsets?: { start: number; end: number }[];
 };
-
-// IMPORTANT: your Node server is on port 3000
-// Use same origin as the frontend (since Express + Vite/CRA are both on 3000 now)
-const BACKEND = "http://localhost:5000";
 
 function colorForType(t: string) {
   switch (t) {
@@ -80,23 +76,26 @@ export default function EditorWithAI({ docId }: { docId: string }) {
     setZones([]);
 
     try {
-      // 1) save content (keeps backend + AI in sync)
-      await axios.put(
-        `${BACKEND}/api/documents/${encodeURIComponent(docId)}/content`,
+      // 1) save content (keeps backend + AI text in sync)
+      await axiosClient.put(
+        `/api/documents/${encodeURIComponent(docId)}/content`,
         { content: text }
       );
 
       // 2) call analyze endpoint
-      const res = await axios.post(
-        `${BACKEND}/api/documents/${encodeURIComponent(docId)}/analyze`,
+      const res = await axiosClient.post(
+        `/api/documents/${encodeURIComponent(docId)}/analyze`,
         { text }
       );
+
       const returnedZones: Zone[] = res.data?.zones || [];
       setZones(returnedZones);
       applyZones(returnedZones);
     } catch (err) {
       console.error("Analyze error", err);
-      alert("Analysis failed. Check that Node server and ai_service are running.");
+      alert(
+        "Analysis failed. Make sure the backend and ai_service are reachable from this frontend."
+      );
     } finally {
       setLoading(false);
     }
@@ -132,7 +131,11 @@ export default function EditorWithAI({ docId }: { docId: string }) {
             marginBottom: 8,
           }}
         >
-          <button className="btn btn-primary" onClick={analyze} disabled={loading}>
+          <button
+            className="btn btn-primary"
+            onClick={analyze}
+            disabled={loading}
+          >
             {loading ? "Analyzing…" : "Analyze Document"}
           </button>
           <span className="small" style={{ color: "#64748b" }}>
@@ -180,7 +183,9 @@ export default function EditorWithAI({ docId }: { docId: string }) {
                     {Math.round((z.confidence || 0) * 100)}%
                   </span>
                 </div>
-                <div style={{ fontSize: 13, marginBottom: 6 }}>{z.message}</div>
+                <div style={{ fontSize: 13, marginBottom: 6 }}>
+                  {z.message}
+                </div>
                 <button
                   className="btn"
                   style={{ fontSize: 12, padding: "4px 8px" }}
