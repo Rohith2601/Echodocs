@@ -8,6 +8,8 @@ import { io, Socket } from "socket.io-client";
 import QuillBase from "quill";
 import QuillCursors from "quill-cursors";
 
+import axiosClient from "../api/axiosClient";
+
 // register cursors module
 const Quill: any = (ReactQuill as any).Quill || QuillBase;
 if (Quill && Quill.register) {
@@ -22,7 +24,11 @@ type Props = {
   userName?: string;
 };
 
-const SOCKET_URL = "http://localhost:5000";
+// Use the same base as axiosClient, so sockets also go to the backend (Render in production)
+const API_BASE =
+  (axiosClient.defaults.baseURL as string) || window.location.origin;
+// remove trailing slash just in case
+const SOCKET_URL = API_BASE.replace(/\/+$/, "");
 
 export default function Editor({
   mode,
@@ -38,7 +44,10 @@ export default function Editor({
   useEffect(() => {
     if (mode !== "shared") return;
 
-    const socket = io(SOCKET_URL);
+    const socket = io(SOCKET_URL, {
+      withCredentials: true,
+      transports: ["websocket", "polling"],
+    });
     socketRef.current = socket;
 
     socket.on("connect", () => {
@@ -49,7 +58,13 @@ export default function Editor({
 
     socket.on(
       "load-document",
-      ({ content: serverContent, readOnly }: { content: string; readOnly: boolean }) => {
+      ({
+        content: serverContent,
+        readOnly,
+      }: {
+        content: string;
+        readOnly: boolean;
+      }) => {
         const quill = quillRef.current?.getEditor();
         if (!quill) return;
 
