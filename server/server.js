@@ -8,12 +8,27 @@ const axios = require("axios");
 
 const app = express();
 
+/**
+ * CORS
+ * - Allow localhost for local dev
+ * - Allow any origin in prod (simpler for you; you can tighten later)
+ */
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:5173"],
-    methods: ["GET", "POST", "PUT"],
+    origin: (origin, callback) => {
+      // Allow non-browser tools / same-origin
+      if (!origin) return callback(null, true);
+      return callback(null, true); // 🔓 allow all for now
+    },
+    methods: ["GET", "POST", "PUT", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: false,
   })
 );
+
+// Handle preflight
+app.options("*", cors());
+
 app.use(express.json({ limit: "2mb" }));
 
 const server = http.createServer(app);
@@ -22,13 +37,21 @@ const server = http.createServer(app);
 const documents = {};
 const presence = {};
 
+/**
+ * Socket.IO
+ * Use the same relaxed CORS config so it works from Vercel in prod.
+ */
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:5173"],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      return callback(null, true); // 🔓 allow all
+    },
     methods: ["GET", "POST"],
   },
 });
 
+// AI service URL (set on Render as AI_SERVICE_URL)
 const AI_SERVICE_URL =
   process.env.AI_SERVICE_URL || "http://127.0.0.1:8000/analyze-document";
 
@@ -51,7 +74,7 @@ function pickColor(seed) {
   return palette[Math.abs(s) % palette.length];
 }
 
-// ===== Socket.IO real-time =====
+// ===================== Socket.IO real-time =====================
 io.on("connection", (socket) => {
   console.log("[io] connect", socket.id);
 
@@ -184,8 +207,9 @@ io.on("connection", (socket) => {
   });
 });
 
-// ===== REST: docs, history, ops, contributions =====
+// ===================== REST: docs, history, ops, contributions =====================
 
+// Create a read-only snapshot from a personal doc
 app.post("/api/share-personal", (req, res) => {
   try {
     const { docId, content } = req.body;
@@ -304,8 +328,7 @@ app.post("/api/create-shared-from-personal", (req, res) => {
   }
 });
 
-// ===== AI routes =====
-
+// ===================== AI routes =====================
 app.put("/api/documents/:id/content", (req, res) => {
   const id = req.params.id;
   const content = req.body?.content ?? "";
@@ -386,7 +409,7 @@ app.post("/api/documents/:id/analyze", async (req, res) => {
   }
 });
 
-// Simple health check & root for Render and manual testing
+// ===================== Health / root =====================
 app.get("/", (req, res) => {
   res.send("Echodocs backend is running ✅");
 });
@@ -395,8 +418,7 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-
-// ===== Start server on 5000 =====
+// ===================== Start server =====================
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log("Server running on port", PORT);
