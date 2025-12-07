@@ -1,14 +1,16 @@
-// src/api/axiosClient.ts
+// client/src/api/axiosClient.ts
 import axios from "axios";
 
-// Vite env: define VITE_BACKEND_URL in Vercel
-const envBaseURL =
-  (import.meta as any).env?.VITE_BACKEND_URL ||
+/**
+ * Order of resolution:
+ * 1) process.env.REACT_APP_BACKEND_URL (set in Vercel)
+ * 2) window.__BACKEND_URL (optional runtime injection)
+ * 3) window.location.origin (same origin)
+ */
+const baseURL =
+  (process.env.REACT_APP_BACKEND_URL as string) ||
   (window as any).__BACKEND_URL ||
-  "";
-
-// Local dev: if nothing is set, default to localhost:3000
-const baseURL = envBaseURL || "http://localhost:3000";
+  window.location.origin;
 
 console.log("[axiosClient] baseURL =", baseURL);
 
